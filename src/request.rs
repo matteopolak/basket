@@ -4,6 +4,8 @@ use std::net::TcpStream;
 use serde::Serialize;
 use url::{ParseError, Url};
 
+use crate::Error;
+
 use super::header::Header;
 use super::response::Response;
 
@@ -41,7 +43,7 @@ impl Request {
 		RequestBuilder::new(Method::Post, url)
 	}
 
-	pub fn send(self) -> Result<Response, io::Error> {
+	pub fn send(self) -> Result<Response, Error> {
 		let mut stream = TcpStream::connect(self.url.socket_addrs(|| None)?.as_slice())?;
 
 		self.write(&mut stream)?;
@@ -92,6 +94,7 @@ impl Request {
 
 pub struct RequestBuilder {
 	request: Request,
+	error: Option<Error>,
 }
 
 impl RequestBuilder {
@@ -99,6 +102,7 @@ impl RequestBuilder {
 		let url = url.try_into().unwrap();
 
 		Self {
+			error: None,
 			request: Request {
 				method,
 				body: None,
@@ -115,7 +119,11 @@ impl RequestBuilder {
 		}
 	}
 
-	pub fn send(self) -> Result<Response, io::Error> {
+	pub fn send(self) -> Result<Response, Error> {
+		if let Some(error) = self.error {
+			return Err(error);
+		}
+
 		self.request.send()
 	}
 
@@ -128,8 +136,15 @@ impl RequestBuilder {
 	}
 
 	pub fn json<T: Serialize + ?Sized>(mut self, payload: &T) -> Self {
-		// FIXME: handle errors
-		let bytes = serde_json::to_vec(payload).expect("invalid JSON body");
+		let bytes = match serde_json::to_vec(payload) {
+			Ok(b) => b,
+			Err(e) => {
+				self.error = Some(e.into());
+
+				return self;
+			}
+		};
+
 		let len = bytes.len();
 
 		self.request.body = Some(bytes);

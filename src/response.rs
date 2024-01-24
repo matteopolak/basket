@@ -1,6 +1,6 @@
-use std::io;
-
 use serde::de::DeserializeOwned;
+
+use crate::Error;
 
 use super::header::Header;
 
@@ -12,14 +12,15 @@ pub struct Response {
 }
 
 impl Response {
-	pub fn json<T: DeserializeOwned>(self) -> Result<T, serde_json::Error> {
-		self.body
-			.as_deref()
-			.ok_or_else(|| panic!("no body"))
-			.and_then(serde_json::from_slice)
+	pub fn json<T: DeserializeOwned>(self) -> Result<T, Error> {
+		let Some(body) = self.body else {
+			return Err(Error::ExpectedBody);
+		};
+
+		Ok(serde_json::from_slice(&body)?)
 	}
 
-	pub fn from_bytes(mut bytes: Vec<u8>) -> Result<Self, io::Error> {
+	pub fn from_bytes(mut bytes: Vec<u8>) -> Result<Self, Error> {
 		let mut response = Response {
 			headers: vec![],
 			status: 0,
@@ -32,7 +33,7 @@ impl Response {
 		slice = expect_skip(slice, b" ")?;
 
 		let (mut slice, status) = extract_until(slice, b" ");
-		let status: u16 = std::str::from_utf8(status).unwrap().parse().unwrap();
+		let status: u16 = core::str::from_utf8(status).unwrap().parse().unwrap();
 
 		response.status = status;
 
@@ -65,9 +66,9 @@ impl Response {
 	}
 }
 
-fn expect_skip<'a>(bytes: &'a [u8], seq: &[u8]) -> Result<&'a [u8], io::Error> {
+fn expect_skip<'a>(bytes: &'a [u8], seq: &[u8]) -> Result<&'a [u8], Error> {
 	if !bytes.starts_with(seq) {
-		panic!("expected {:?}", seq);
+		return Err(Error::InvalidFormat);
 	}
 
 	Ok(&bytes[seq.len()..])
@@ -87,9 +88,9 @@ fn extract_until<'a>(bytes: &'a [u8], seq: &[u8]) -> (&'a [u8], &'a [u8]) {
 	(&bytes[i..], extracted)
 }
 
-fn extract_http_version(bytes: &[u8]) -> Result<&[u8], io::Error> {
+fn extract_http_version(bytes: &[u8]) -> Result<&[u8], Error> {
 	if !bytes.starts_with(b"HTTP/1.1") {
-		panic!("unsupported http version");
+		return Err(Error::UnsupportedHttp);
 	}
 
 	Ok(&bytes[b"HTTP/1.1".len()..])

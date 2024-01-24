@@ -1,4 +1,4 @@
-use http_client::request::Request;
+use http_client::Request;
 
 #[derive(serde::Serialize)]
 struct Input {
