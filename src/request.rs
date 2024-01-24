@@ -50,17 +50,8 @@ impl Request {
 		stream.flush()?;
 
 		let mut sink = Vec::new();
-		let mut buf = [0u8; Self::BUF_SIZE];
 
-		loop {
-			let n = stream.read(&mut buf)?;
-
-			sink.extend_from_slice(&buf[..n]);
-
-			if n < Self::BUF_SIZE {
-				break;
-			}
-		}
+		stream.read_to_end(&mut sink)?;
 
 		Response::from_bytes(sink)
 	}
@@ -100,20 +91,24 @@ pub struct RequestBuilder {
 impl RequestBuilder {
 	pub fn new<U: TryInto<Url, Error = ParseError>>(method: Method, url: U) -> Self {
 		let url = url.try_into().unwrap();
+		let mut headers = vec![Header {
+			name: "connection".into(),
+			value: "close".into(),
+		}];
+
+		if let Some(host) = url.host_str() {
+			headers.push(Header {
+				name: "host".into(),
+				value: host.into(),
+			})
+		}
 
 		Self {
 			error: None,
 			request: Request {
 				method,
 				body: None,
-				headers: if let Some(host) = url.host_str() {
-					vec![Header {
-						name: "host".into(),
-						value: host.into(),
-					}]
-				} else {
-					vec![]
-				},
+				headers,
 				url,
 			},
 		}
