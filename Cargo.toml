@@ -1,0 +1,16 @@
+[package]
+name = "http-client"
+version = "0.2.0"
+edition = "2021"
+license = "MIT"
+authors = ["Matthew Polak <contact@matteopolak.com>"]
+readme = "https://github.com/matteopolak/http-client/blob/main/README.md"
+
+[dependencies]
+serde = "1"
+serde_json = "1"
+url = "2"
+
+[dev-dependencies.serde]
+version = "1"
+features = ["derive"]
