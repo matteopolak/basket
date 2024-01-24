@@ -11,15 +11,23 @@ use super::response::Response;
 
 #[derive(Debug)]
 pub enum Method {
+	Delete,
 	Get,
+	Options,
+	Patch,
 	Post,
+	Put,
 }
 
 impl Method {
 	pub fn as_bytes(&self) -> &[u8] {
 		match self {
+			Self::Delete => b"DELETE",
 			Self::Get => b"GET",
+			Self::Options => b"OPTIONS",
+			Self::Patch => b"PATCH",
 			Self::Post => b"POST",
+			Self::Put => b"PUT",
 		}
 	}
 }
@@ -35,12 +43,28 @@ pub struct Request {
 impl Request {
 	pub const BUF_SIZE: usize = 1024;
 
+	pub fn delete<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
+		RequestBuilder::new(Method::Delete, url)
+	}
+
 	pub fn get<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
 		RequestBuilder::new(Method::Get, url)
 	}
 
+	pub fn options<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
+		RequestBuilder::new(Method::Options, url)
+	}
+
+	pub fn patch<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
+		RequestBuilder::new(Method::Patch, url)
+	}
+
 	pub fn post<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
 		RequestBuilder::new(Method::Post, url)
+	}
+
+	pub fn put<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
+		RequestBuilder::new(Method::Put, url)
 	}
 
 	pub fn send(self) -> Result<Response, Error> {
