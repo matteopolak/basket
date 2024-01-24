@@ -51,6 +51,7 @@ impl Request {
 
 		let mut sink = Vec::new();
 
+		// NOTE: this works because of the `Connection: close` header
 		stream.read_to_end(&mut sink)?;
 
 		Response::from_bytes(sink)
