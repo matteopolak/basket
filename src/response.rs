@@ -1,3 +1,4 @@
+#[cfg(feature = "json")]
 use serde::de::DeserializeOwned;
 
 use crate::Error;
@@ -8,16 +9,40 @@ use super::header::Header;
 pub struct Response {
 	headers: Vec<Header>,
 	status: u16,
-	pub body: Option<Vec<u8>>,
+	body: Option<Vec<u8>>,
 }
 
 impl Response {
+	#[cfg(feature = "json")]
 	pub fn json<T: DeserializeOwned>(self) -> Result<T, Error> {
 		let Some(body) = self.body else {
 			return Err(Error::ExpectedBody);
 		};
 
 		Ok(serde_json::from_slice(&body)?)
+	}
+
+	#[cfg(feature = "xml")]
+	pub fn xml<T: DeserializeOwned>(self) -> Result<T, Error> {
+		let Some(body) = self.body else {
+			return Err(Error::ExpectedBody);
+		};
+
+		let content = std::str::from_utf8(&body)?;
+
+		Ok(quick_xml::de::from_str(content)?)
+	}
+
+	pub fn text(self) -> Result<String, Error> {
+		let Some(body) = self.body else {
+			return Err(Error::ExpectedBody);
+		};
+
+		String::from_utf8(body).map_err(|e| e.utf8_error().into())
+	}
+
+	pub fn bytes(self) -> Result<Vec<u8>, Error> {
+		self.body.ok_or(Error::ExpectedBody)
 	}
 
 	pub fn from_bytes(mut bytes: Vec<u8>) -> Result<Self, Error> {
@@ -33,7 +58,7 @@ impl Response {
 		slice = expect_skip(slice, b" ")?;
 
 		let (mut slice, status) = extract_until(slice, b" ");
-		let status: u16 = core::str::from_utf8(status).unwrap().parse().unwrap();
+		let status = core::str::from_utf8(status)?.parse::<u16>()?;
 
 		response.status = status;
 

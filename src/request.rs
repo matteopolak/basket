@@ -1,6 +1,7 @@
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 
+#[cfg(feature = "json")]
 use serde::Serialize;
 use url::{ParseError, Url};
 
@@ -99,8 +100,9 @@ impl Request {
 			stream.write_all(b"\r\n")?;
 		}
 
+		stream.write_all(b"\r\n")?;
+
 		if let Some(body) = &self.body {
-			stream.write_all(b"\r\n")?;
 			stream.write_all(body.as_slice())?;
 		}
 
@@ -125,7 +127,7 @@ impl RequestBuilder {
 			headers.push(Header {
 				name: "host".into(),
 				value: host.into(),
-			})
+			});
 		}
 
 		Self {
@@ -144,7 +146,15 @@ impl RequestBuilder {
 			return Err(error);
 		}
 
-		self.request.send()
+		if let Some(body) = self.request.body.as_ref() {
+			let len = body.len();
+
+			self.header("content-length", format!("{}", len))
+		} else {
+			self
+		}
+		.request
+		.send()
 	}
 
 	pub fn header<N: Into<String>, V: Into<String>>(mut self, name: N, value: V) -> Self {
@@ -152,9 +162,11 @@ impl RequestBuilder {
 			name: name.into(),
 			value: value.into(),
 		});
+
 		self
 	}
 
+	#[cfg(feature = "json")]
 	pub fn json<T: Serialize + ?Sized>(mut self, payload: &T) -> Self {
 		let bytes = match serde_json::to_vec(payload) {
 			Ok(b) => b,
@@ -165,10 +177,29 @@ impl RequestBuilder {
 			}
 		};
 
-		let len = bytes.len();
+		self.request.body = Some(bytes);
+		self.header("content-type", "application/json")
+	}
+
+	#[cfg(feature = "xml")]
+	pub fn xml<T: Serialize + ?Sized>(mut self, payload: &T) -> Self {
+		let bytes = match quick_xml::se::to_string(payload) {
+			Ok(b) => b.into_bytes(),
+			Err(e) => {
+				self.error = Some(e.into());
+
+				return self;
+			}
+		};
 
 		self.request.body = Some(bytes);
-		self.header("content-length", format!("{len}"))
-			.header("content-type", "application/json")
+		self.header("content-type", "application/xml")
+	}
+
+	pub fn body<T: Into<Vec<u8>>>(mut self, payload: T) -> Self {
+		let bytes: Vec<u8> = payload.into();
+
+		self.request.body = Some(bytes);
+		self
 	}
 }

@@ -1,45 +1,74 @@
 use core::fmt;
-use std::io;
+use std::{io, num::ParseIntError, str::Utf8Error};
 
 use url::ParseError;
 
 #[derive(Debug)]
 pub enum Error {
-	Io(io::Error),
-	InvalidUrl(ParseError),
-	UnsupportedHttp,
 	ExpectedBody,
-	Json(serde_json::Error),
+	Io(io::Error),
 	InvalidFormat,
+	InvalidInt(ParseIntError),
+	InvalidUrl(ParseError),
+	InvalidUtf8(Utf8Error),
+	#[cfg(feature = "json")]
+	Json(serde_json::Error),
+	Xml(quick_xml::DeError),
+	UnsupportedHttp,
 }
 
 impl fmt::Display for Error {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			Error::ExpectedBody => write!(f, "expected body"),
-			Error::InvalidUrl(e) => write!(f, "invalid url: {e}"),
-			Error::UnsupportedHttp => write!(f, "only HTTP/1.1 is supported"),
-			Error::Json(e) => write!(f, "json error: {e}"),
-			Error::InvalidFormat => write!(f, "invalid format when parsing resposne"),
 			Error::Io(e) => write!(f, "io error: {e}"),
+			Error::InvalidFormat => write!(f, "invalid format when parsing resposne"),
+			Error::InvalidInt(e) => write!(f, "invalid int: {e}"),
+			Error::InvalidUrl(e) => write!(f, "invalid url: {e}"),
+			Error::InvalidUtf8(e) => write!(f, "invalid utf8: {e}"),
+			#[cfg(feature = "json")]
+			Error::Json(e) => write!(f, "json error: {e}"),
+			#[cfg(feature = "xml")]
+			Error::Xml(e) => write!(f, "xml error: {e}"),
+			Error::UnsupportedHttp => write!(f, "only HTTP/1.1 is supported"),
 		}
 	}
 }
 
+#[cfg(feature = "xml")]
+impl From<quick_xml::DeError> for Error {
+	fn from(value: quick_xml::DeError) -> Self {
+		Self::Xml(value)
+	}
+}
+
+impl From<ParseIntError> for Error {
+	fn from(value: ParseIntError) -> Self {
+		Self::InvalidInt(value)
+	}
+}
+
+impl From<Utf8Error> for Error {
+	fn from(value: Utf8Error) -> Self {
+		Self::InvalidUtf8(value)
+	}
+}
+
+#[cfg(feature = "json")]
 impl From<serde_json::Error> for Error {
 	fn from(value: serde_json::Error) -> Self {
-		Error::Json(value)
+		Self::Json(value)
 	}
 }
 
 impl From<io::Error> for Error {
 	fn from(value: io::Error) -> Self {
-		Error::Io(value)
+		Self::Io(value)
 	}
 }
 
 impl From<ParseError> for Error {
 	fn from(value: ParseError) -> Self {
-		Error::InvalidUrl(value)
+		Self::InvalidUrl(value)
 	}
 }

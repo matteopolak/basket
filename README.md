@@ -1,3 +1,9 @@
-# HTTP/1.1 Client
+# Basket
 
-This is an in-progress implementation of a basic HTTP/1.1-compatible client.
+A simple HTTP/1.1 client.
+
+## Features
+
+- Arbitrary headers
+- JSON serialization/deserialization with [serde](https://github.com/serde-rs/serde)
+- `GET`, `POST`, `PUT`, `DELETE`, `PATCH` methods
