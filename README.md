@@ -1,5 +1,8 @@
 # Basket
 
+[![build status](https://github.com/matteopolak/basket/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
+[![license](https://img.shields.io/github/license/matteopolak/basket.svg)](LICENSE)
+
 A simple HTTP/1.1 client.
 
 ## Features
