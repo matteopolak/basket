@@ -13,6 +13,10 @@ pub struct Response {
 }
 
 impl Response {
+	pub fn status(&self) -> u16 {
+		self.status
+	}
+
 	#[cfg(feature = "json")]
 	pub fn json<T: DeserializeOwned>(self) -> Result<T, Error> {
 		let Some(body) = self.body else {

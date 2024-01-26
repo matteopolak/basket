@@ -13,6 +13,7 @@ pub enum Error {
 	InvalidUtf8(Utf8Error),
 	#[cfg(feature = "json")]
 	Json(serde_json::Error),
+	#[cfg(feature = "xml")]
 	Xml(quick_xml::DeError),
 	UnsupportedHttp,
 }

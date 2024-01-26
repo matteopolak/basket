@@ -200,6 +200,6 @@ impl RequestBuilder {
 		let bytes: Vec<u8> = payload.into();
 
 		self.request.body = Some(bytes);
-		self
+		self.header("content-type", "text/plain")
 	}
 }

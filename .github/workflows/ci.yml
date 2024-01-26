@@ -1,0 +1,46 @@
+on:
+  push:
+    paths:
+      - '**.rs'
+      - '**.toml'
+      - '**.yml'
+      - '.git*'
+      - 'Cargo.lock'
+    branches:
+      - main
+
+name: test
+env:
+  DISCORD_TOKEN: ''
+  REDIS_URL: ''
+  DATABASE_URL: ''
+  TOPGG_SECRET: ''
+  TOPGG_TOKEN: ''
+  REDIRECT_URI: ''
+  CLIENT_ID: ''
+  CLIENT_SECRET: ''
+  JWT_SECRET: ''
+
+jobs:
+  test:
+    name: cargo test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: "pnpm"
+      - name: install dependencies
+        run: pnpm install
+        working-directory: ./test
+      - name: run express server
+        run: pnpm start &
+        working-directory: ./test
+
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo test --all-features
