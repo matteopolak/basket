@@ -1,7 +1,7 @@
 use std::io::{self, Read, Write};
 use std::net::TcpStream;
 
-#[cfg(feature = "json")]
+#[cfg(any(feature = "json", feature = "xml"))]
 use serde::Serialize;
 use url::{ParseError, Url};
 

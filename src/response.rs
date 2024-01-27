@@ -1,4 +1,4 @@
-#[cfg(feature = "json")]
+#[cfg(any(feature = "json", feature = "xml"))]
 use serde::de::DeserializeOwned;
 
 use crate::Error;
