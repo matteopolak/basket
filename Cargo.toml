@@ -16,6 +16,6 @@ url = "2"
 serde = { version = "1", features = ["derive"] }
 
 [features]
-default = ["json", "xml"]
+default = []
 json = ["dep:serde", "dep:serde_json"]
 xml = ["dep:serde", "dep:quick-xml"]

@@ -21,14 +21,14 @@ pub enum Method {
 }
 
 impl Method {
-	pub fn as_bytes(&self) -> &[u8] {
+	pub fn as_str(&self) -> &str {
 		match self {
-			Self::Delete => b"DELETE",
-			Self::Get => b"GET",
-			Self::Options => b"OPTIONS",
-			Self::Patch => b"PATCH",
-			Self::Post => b"POST",
-			Self::Put => b"PUT",
+			Self::Delete => "DELETE",
+			Self::Get => "GET",
+			Self::Options => "OPTIONS",
+			Self::Patch => "PATCH",
+			Self::Post => "POST",
+			Self::Put => "PUT",
 		}
 	}
 }
@@ -42,8 +42,6 @@ pub struct Request {
 }
 
 impl Request {
-	pub const BUF_SIZE: usize = 1024;
-
 	pub fn delete<U: TryInto<Url, Error = ParseError>>(url: U) -> RequestBuilder {
 		RequestBuilder::new(Method::Delete, url)
 	}
@@ -83,9 +81,7 @@ impl Request {
 	}
 
 	fn write(&self, stream: &mut TcpStream) -> io::Result<()> {
-		stream.write_all(self.method.as_bytes())?;
-		stream.write_all(b" ")?;
-		stream.write_all(self.url.path().as_bytes())?;
+		write!(stream, "{} {}", self.method.as_str(), self.url.path())?;
 
 		if let Some(query) = self.url.query() {
 			stream.write_all(query.as_bytes())?;
@@ -94,10 +90,7 @@ impl Request {
 		stream.write_all(b" HTTP/1.1\r\n")?;
 
 		for header in &self.headers {
-			stream.write_all(header.name.as_bytes())?;
-			stream.write_all(b": ")?;
-			stream.write_all(header.value.as_bytes())?;
-			stream.write_all(b"\r\n")?;
+			write!(stream, "{}: {}\r\n", header.name, header.value)?;
 		}
 
 		stream.write_all(b"\r\n")?;

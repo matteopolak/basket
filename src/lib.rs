@@ -12,8 +12,6 @@ pub use response::*;
 mod tests {
 	use super::*;
 
-	use serde::{Deserialize, Serialize};
-
 	#[test]
 	fn test_get_request() {
 		let response = Request::get("http://localhost:1337").send().unwrap();
@@ -36,7 +34,10 @@ mod tests {
 	}
 
 	#[test]
+	#[cfg(feature = "json")]
 	fn test_json_request() {
+		use serde::{Deserialize, Serialize};
+
 		#[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
 		struct Input {
 			name: String,
