@@ -103,6 +103,7 @@ impl Request {
 	}
 }
 
+#[derive(Debug)]
 pub struct RequestBuilder {
 	request: Request,
 	error: Option<Error>,

@@ -10,16 +10,6 @@ on:
       - main
 
 name: test
-env:
-  DISCORD_TOKEN: ''
-  REDIS_URL: ''
-  DATABASE_URL: ''
-  TOPGG_SECRET: ''
-  TOPGG_TOKEN: ''
-  REDIRECT_URI: ''
-  CLIENT_ID: ''
-  CLIENT_SECRET: ''
-  JWT_SECRET: ''
 
 jobs:
   test:

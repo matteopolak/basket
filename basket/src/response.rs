@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[cfg(any(feature = "json", feature = "xml"))]
 use serde::de::DeserializeOwned;
 
@@ -10,6 +12,29 @@ pub struct Response {
 	headers: Vec<Header>,
 	status: u16,
 	body: Option<Vec<u8>>,
+}
+
+impl fmt::Display for Response {
+	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+		write!(f, "HTTP/1.1 {status}\r\n", status = self.status)?;
+
+		for header in &self.headers {
+			write!(
+				f,
+				"{name}: {value}\r\n",
+				name = header.name,
+				value = header.value
+			)?;
+		}
+
+		write!(f, "\r\n")?;
+
+		if let Some(body) = &self.body {
+			write!(f, "{}", String::from_utf8_lossy(body))?;
+		}
+
+		Ok(())
+	}
 }
 
 impl Response {

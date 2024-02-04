@@ -1,0 +1,12 @@
+[package]
+name = "basket-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "basket"
+path = "src/main.rs"
+
+[dependencies]
+basket = { path = "../basket", features = ["json"] }
+clap = { version = "4", features = ["derive"] }

@@ -1,21 +1,2 @@
-[package]
-name = "basket"
-version = "0.2.0"
-edition = "2021"
-license = "MIT"
-authors = ["Matthew Polak <contact@matteopolak.com>"]
-readme = "https://github.com/matteopolak/basket/blob/main/README.md"
-
-[dependencies]
-quick-xml = { version = "0.31.0", features = ["serialize"], optional = true }
-serde = { version = "1", optional = true }
-serde_json = { version = "1", optional = true }
-url = "2"
-
-[dev-dependencies]
-serde = { version = "1", features = ["derive"] }
-
-[features]
-default = []
-json = ["dep:serde", "dep:serde_json"]
-xml = ["dep:serde", "dep:quick-xml"]
+[workspace]
+members = ["basket-cli", "basket"]
