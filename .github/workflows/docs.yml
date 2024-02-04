@@ -3,7 +3,9 @@ name: docs
 on:
   push:
     paths:
-      - '*.tape'
+      - '**.tape'
+      - '**.yml'
+      - '**.rs'
 
 jobs:
   vhs:
