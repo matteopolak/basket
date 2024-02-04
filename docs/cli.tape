@@ -3,7 +3,7 @@ Require basket
 Output docs/cli.gif
 
 Set TypingSpeed 75ms
-Set FontSize 22
+Set FontSize 18
 Set Width 1300
 Set Height 650
 
