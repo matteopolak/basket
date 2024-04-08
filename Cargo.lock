@@ -52,7 +52,7 @@ dependencies = [
 
 [[package]]
 name = "basket"
-version = "0.3.2"
+version = "0.4.0"
 dependencies = [
  "quick-xml",
  "serde",
@@ -62,7 +62,7 @@ dependencies = [
 
 [[package]]
 name = "basket-cli"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "basket",
  "clap",
