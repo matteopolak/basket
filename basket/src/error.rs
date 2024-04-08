@@ -17,6 +17,7 @@ pub enum Error {
 	Xml(quick_xml::DeError),
 	UnsupportedHttp,
 	UnknownMethod,
+	TooManyRedirects,
 }
 
 impl fmt::Display for Error {
@@ -34,6 +35,7 @@ impl fmt::Display for Error {
 			Error::Xml(e) => write!(f, "xml error: {e}"),
 			Error::UnsupportedHttp => write!(f, "only HTTP/1.1 is supported"),
 			Error::UnknownMethod => write!(f, "unknown method"),
+			Error::TooManyRedirects => write!(f, "too many redirects"),
 		}
 	}
 }

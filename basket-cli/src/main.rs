@@ -66,7 +66,10 @@ fn main() {
 
 	if let Some(data) = args.data {
 		if args.json {
-			request = request.json(&data);
+			let value: serde_json::Value =
+				serde_json::from_str(&data).expect("invalid json provided");
+
+			request = request.json(&value);
 		} else {
 			request = request.body(data);
 		}

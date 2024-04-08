@@ -74,13 +74,10 @@ impl<'h> Response<'h> {
 		extract::http_version(reader)?;
 		extract::skip(reader, b" ")?;
 
-		let status = extract::until(reader, b" ")?;
+		let status = extract::until(reader, b"\r\n")?;
 		let status = std::str::from_utf8(&status)?.parse::<u16>()?;
 
 		response.status = status;
-
-		// skip rest of line
-		extract::until(reader, b"\r\n")?;
 
 		let (headers, content_length) = header::from_reader(reader)?;
 		let mut response = Self {
@@ -106,11 +103,6 @@ impl<'h> Response<'h> {
 	{
 		write!(sink, "HTTP/1.1 {status}\r\n", status = self.status)?;
 
-		if let Some(body) = &self.body {
-			sink.write_all(header::CONTENT_LENGTH.as_bytes())?;
-			write!(sink, ": {}\r\n", body.len())?;
-		}
-
 		for header in &self.headers {
 			write!(
 				sink,
@@ -129,11 +121,11 @@ impl<'h> Response<'h> {
 		Ok(())
 	}
 
-	pub fn header<H>(&mut self, header: H)
-	where
-		H: IntoHeader<'h>,
-	{
-		self.headers.push(header.into_header());
+	pub fn header(&self, name: &str) -> Option<&str> {
+		self.headers
+			.iter()
+			.find(|header| header.name.eq_ignore_ascii_case(name))
+			.map(|header| header.value.as_ref())
 	}
 }
 
@@ -154,6 +146,12 @@ impl Default for ResponseBuilder<'_> {
 	}
 }
 
+impl<'h> From<Response<'h>> for ResponseBuilder<'h> {
+	fn from(response: Response<'h>) -> Self {
+		Self { response }
+	}
+}
+
 impl<'h> ResponseBuilder<'h> {
 	pub fn new() -> Self {
 		Self::default()
@@ -165,8 +163,10 @@ impl<'h> ResponseBuilder<'h> {
 	}
 
 	pub fn body(mut self, body: Vec<u8>) -> Self {
+		let len = body.len();
+
 		self.response.body = Some(body);
-		self
+		self.header((header::CONTENT_LENGTH, len))
 	}
 
 	pub fn build(self) -> Response<'h> {
@@ -177,23 +177,21 @@ impl<'h> ResponseBuilder<'h> {
 	where
 		H: IntoHeader<'h>,
 	{
-		self.response.header(header);
+		self.response.headers.push(header.into_header());
 		self
 	}
 
 	#[cfg(feature = "json")]
-	pub fn json<T: Serialize>(mut self, payload: &T) -> Result<Self, Error> {
+	pub fn json<T: Serialize>(self, payload: &T) -> Result<Self, Error> {
 		let bytes = serde_json::to_vec(payload)?;
 
-		self.response.body = Some(bytes);
-		Ok(self.header(header::CONTENT_TYPE_JSON))
+		Ok(self.body(bytes).header(header::CONTENT_TYPE_JSON))
 	}
 
 	#[cfg(feature = "xml")]
-	pub fn xml<T: Serialize>(mut self, payload: &T) -> Result<Self, Error> {
+	pub fn xml<T: Serialize>(self, payload: &T) -> Result<Self, Error> {
 		let bytes = quick_xml::se::to_string(payload)?.into_bytes();
 
-		self.response.body = Some(bytes);
-		Ok(self.header(header::CONTENT_TYPE_XML))
+		Ok(self.body(bytes).header(header::CONTENT_TYPE_XML))
 	}
 }

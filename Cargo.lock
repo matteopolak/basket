@@ -66,6 +66,7 @@ version = "1.0.0"
 dependencies = [
  "basket",
  "clap",
+ "serde_json",
 ]
 
 [[package]]

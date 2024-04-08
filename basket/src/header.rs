@@ -10,6 +10,7 @@ pub struct Header<'a> {
 
 pub const CONTENT_TYPE: &str = "content-type";
 pub const CONTENT_LENGTH: &str = "content-length";
+pub const LOCATION: &str = "location";
 
 pub const CONTENT_TYPE_JSON: Header<'static> = Header {
 	name: Cow::Borrowed(CONTENT_TYPE),
@@ -80,6 +81,10 @@ pub trait IntoHeader<'a> {
 	fn into_header(self) -> Header<'a>;
 }
 
+pub trait IntoHeaderValue<'a> {
+	fn into_header_value(self) -> Cow<'a, str>;
+}
+
 impl<'a> IntoHeader<'a> for Header<'a> {
 	fn into_header(self) -> Header<'a> {
 		self
@@ -88,13 +93,31 @@ impl<'a> IntoHeader<'a> for Header<'a> {
 
 impl<'a, N, V> IntoHeader<'a> for (N, V)
 where
-	N: Into<Cow<'a, str>>,
-	V: Into<Cow<'a, str>>,
+	N: IntoHeaderValue<'a>,
+	V: IntoHeaderValue<'a>,
 {
 	fn into_header(self) -> Header<'a> {
 		Header {
-			name: self.0.into(),
-			value: self.1.into(),
+			name: self.0.into_header_value(),
+			value: self.1.into_header_value(),
 		}
+	}
+}
+
+impl<'a> IntoHeaderValue<'a> for &'a str {
+	fn into_header_value(self) -> Cow<'a, str> {
+		Cow::Borrowed(self)
+	}
+}
+
+impl IntoHeaderValue<'static> for String {
+	fn into_header_value(self) -> Cow<'static, str> {
+		Cow::Owned(self)
+	}
+}
+
+impl<'a> IntoHeaderValue<'a> for usize {
+	fn into_header_value(self) -> Cow<'a, str> {
+		Cow::Owned(self.to_string())
 	}
 }

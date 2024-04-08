@@ -3,7 +3,7 @@ use std::{
 	net::TcpListener,
 };
 
-use crate::{Error, Request, Response};
+use crate::{Error, Request, Response, ResponseBuilder};
 
 pub type Handler<S> = fn(S, Request) -> Response;
 
@@ -47,7 +47,7 @@ where
 				path
 			};
 
-			let mut response = self
+			let response = self
 				.routes
 				.iter()
 				.find(|(route, _)| path.starts_with(route))
@@ -55,9 +55,12 @@ where
 				.unwrap_or_else(|| Response::builder().status(404).build());
 
 			let mut stream = reader.into_inner();
+			let response: ResponseBuilder = response.into();
 
-			response.header(("server", "basket"));
-			response.write(&mut stream)?;
+			response
+				.header(("server", "basket"))
+				.build()
+				.write(&mut stream)?;
 			stream.flush()?;
 		}
 	}

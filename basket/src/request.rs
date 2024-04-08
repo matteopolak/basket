@@ -111,7 +111,7 @@ impl<'h> Request<'h> {
 		Ok(request)
 	}
 
-	pub fn send(self) -> Result<Response<'h>, Error> {
+	pub fn send(&self) -> Result<Response<'h>, Error> {
 		let mut stream = TcpStream::connect(self.url.socket_addrs(|| None)?.as_slice())?;
 
 		self.write(&mut stream)?;
@@ -222,7 +222,7 @@ impl<'h> RequestBuilder<'h> {
 		if let Some(body) = self.request.body.as_ref() {
 			let len = body.len();
 
-			self.header((header::CONTENT_LENGTH, format!("{}", len)))
+			self.header((header::CONTENT_LENGTH, len))
 		} else {
 			self
 		}
