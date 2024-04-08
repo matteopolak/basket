@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*.*.*'
 
+env:
+  RUSTUP_TOOLCHAIN: nightly
+
 permissions:
   contents: write
 
