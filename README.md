@@ -17,4 +17,4 @@ A simple HTTP/1.1 client and server.
 
 ## Examples
 
-View all examples in [examples](examples) directory, and run them with `cargo run --example <name>`.
+View all examples in [examples](examples) directory, and run them with `cargo run --package example-<name>`.
