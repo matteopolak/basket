@@ -73,10 +73,13 @@ fn main() {
 	}
 
 	for header in args.headers {
-		request = request.header(header.0, header.1);
+		request = request.header((header.0, header.1));
 	}
 
 	let response = request.send().expect("could not send request");
+	let mut buf = Vec::new();
 
-	println!("{}", response);
+	response.write(&mut buf).expect("could not write response");
+
+	println!("{}", String::from_utf8_lossy(&buf));
 }

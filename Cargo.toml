@@ -1,2 +1,3 @@
 [workspace]
-members = ["basket-cli", "basket"]
+members = ["basket-cli", "basket", "examples/*"]
+resolver = "2"

@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{io, num::ParseIntError, str::Utf8Error};
+use std::{io, num::ParseIntError, str::Utf8Error, string::FromUtf8Error};
 
 use url::ParseError;
 
@@ -16,6 +16,7 @@ pub enum Error {
 	#[cfg(feature = "xml")]
 	Xml(quick_xml::DeError),
 	UnsupportedHttp,
+	UnknownMethod,
 }
 
 impl fmt::Display for Error {
@@ -32,6 +33,7 @@ impl fmt::Display for Error {
 			#[cfg(feature = "xml")]
 			Error::Xml(e) => write!(f, "xml error: {e}"),
 			Error::UnsupportedHttp => write!(f, "only HTTP/1.1 is supported"),
+			Error::UnknownMethod => write!(f, "unknown method"),
 		}
 	}
 }
@@ -52,6 +54,12 @@ impl From<ParseIntError> for Error {
 impl From<Utf8Error> for Error {
 	fn from(value: Utf8Error) -> Self {
 		Self::InvalidUtf8(value)
+	}
+}
+
+impl From<FromUtf8Error> for Error {
+	fn from(value: FromUtf8Error) -> Self {
+		Self::InvalidUtf8(value.utf8_error())
 	}
 }
 

@@ -7,7 +7,7 @@
 [![release status](https://github.com/matteopolak/basket/actions/workflows/release.yml/badge.svg)](.github/workflows/release.yml)
 [![license](https://img.shields.io/github/license/matteopolak/basket.svg)](LICENSE)
 
-A simple HTTP/1.1 client.
+A simple HTTP/1.1 client and server.
 
 ## Features
 
