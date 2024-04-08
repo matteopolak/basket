@@ -99,8 +99,10 @@ impl<'h> Response<'h> {
 		extract::http_version(reader)?;
 		extract::skip(reader, b" ")?;
 
-		let status = extract::until(reader, b"\r\n")?;
+		let status = extract::until(reader, b" ")?;
 		let status = std::str::from_utf8(&status)?.parse::<u16>()?;
+
+		extract::until(reader, b"\r\n")?;
 
 		response.status = status;
 
