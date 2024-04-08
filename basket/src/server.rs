@@ -7,6 +7,9 @@ use crate::{Error, Request, Response, ResponseBuilder};
 
 pub type Handler<S> = fn(S, Request) -> Response;
 
+/// A simple HTTP router.
+#[must_use]
+#[derive(Debug)]
 pub struct Router<'a, S> {
 	routes: Vec<(&'a str, Handler<S>)>,
 	state: S,
@@ -32,7 +35,13 @@ where
 		self
 	}
 
-	pub fn listen(self, listener: TcpListener) -> Result<!, Error> {
+	/// Listens for incoming connections on the provided listener.
+	///
+	/// # Errors
+	/// - If an error occurs while accepting a connection.
+	/// - If an error occurs while reading from the connection.
+	/// - If an error occurs while writing to the connection.
+	pub fn listen(self, listener: &TcpListener) -> Result<!, Error> {
 		loop {
 			let (stream, _) = listener.accept()?;
 			let mut reader = io::BufReader::new(stream);
@@ -51,8 +60,10 @@ where
 				.routes
 				.iter()
 				.find(|(route, _)| path.starts_with(route))
-				.map(|(_, handler)| handler(self.state.clone(), request))
-				.unwrap_or_else(|| Response::builder().status(404).build());
+				.map_or_else(
+					|| Response::builder().status(404).build(),
+					|(_, handler)| handler(self.state.clone(), request),
+				);
 
 			let mut stream = reader.into_inner();
 			let response: ResponseBuilder = response.into();

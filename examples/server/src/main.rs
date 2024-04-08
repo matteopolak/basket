@@ -12,7 +12,7 @@ fn main() {
 
 	println!("listening on http://localhost:3000");
 
-	router.listen(listener).unwrap();
+	router.listen(&listener).unwrap();
 }
 
 #[derive(Deserialize, Serialize)]

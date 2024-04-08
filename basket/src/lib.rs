@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 #![feature(never_type)]
 
 pub mod error;

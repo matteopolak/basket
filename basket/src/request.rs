@@ -22,6 +22,7 @@ pub enum Method {
 }
 
 impl Method {
+	#[must_use]
 	pub fn as_str(&self) -> &str {
 		match self {
 			Self::Delete => "DELETE",
@@ -33,6 +34,10 @@ impl Method {
 		}
 	}
 
+	/// Converts a byte slice to a Method.
+	///
+	/// # Errors
+	/// - If the byte slice is not a valid HTTP method.
 	pub fn from_bytes(value: &[u8]) -> Result<Method, Error> {
 		Ok(match value {
 			b"DELETE" => Self::Delete,
@@ -46,6 +51,7 @@ impl Method {
 	}
 }
 
+#[must_use]
 #[derive(Debug)]
 pub struct Request<'h> {
 	pub url: Url,
@@ -79,6 +85,14 @@ impl<'h> Request<'h> {
 		RequestBuilder::new(Method::Put, url)
 	}
 
+	/// Parses a request from a reader.
+	///
+	/// # Errors
+	/// - If the method is not a valid HTTP method.
+	/// - If the URL is not a valid URL.
+	/// - If the HTTP version is not HTTP/1.1.
+	/// - If the headers are not valid.
+	/// - If the content length is not a valid integer.
 	pub fn from_reader<R>(reader: &mut R) -> Result<Self, Error>
 	where
 		R: Read,
@@ -111,6 +125,11 @@ impl<'h> Request<'h> {
 		Ok(request)
 	}
 
+	/// Sends the request and returns the response.
+	///
+	/// # Errors
+	/// - If the request could not be sent.
+	/// - If the response could not be read.
 	pub fn send(&self) -> Result<Response<'h>, Error> {
 		let mut stream = TcpStream::connect(self.url.socket_addrs(|| None)?.as_slice())?;
 
@@ -149,6 +168,11 @@ impl<'h> Request<'h> {
 		Ok(())
 	}
 
+	/// Deserializes the body as JSON.
+	///
+	/// # Errors
+	/// - If the body is not present.
+	/// - Forwards any errors from [``serde_json``].
 	#[cfg(feature = "json")]
 	pub fn json<T: DeserializeOwned>(self) -> Result<T, Error> {
 		let Some(body) = self.body else {
@@ -158,6 +182,11 @@ impl<'h> Request<'h> {
 		Ok(serde_json::from_slice(&body)?)
 	}
 
+	/// Deserializes the body as XML.
+	///
+	/// # Errors
+	/// - If the body is not present.
+	/// - Forwards any errors from [``quick_xml``].
 	#[cfg(feature = "xml")]
 	pub fn xml<T: DeserializeOwned>(self) -> Result<T, Error> {
 		let Some(body) = self.body else {
@@ -169,6 +198,11 @@ impl<'h> Request<'h> {
 		Ok(quick_xml::de::from_str(content)?)
 	}
 
+	/// Returns the body as a string.
+	///
+	/// # Errors
+	/// - If the body is not present.
+	/// - If the body is not valid UTF-8.
 	pub fn text(self) -> Result<String, Error> {
 		let Some(body) = self.body else {
 			return Err(Error::ExpectedBody);
@@ -177,11 +211,17 @@ impl<'h> Request<'h> {
 		String::from_utf8(body).map_err(|e| e.utf8_error().into())
 	}
 
+	/// Returns the body as a byte vector.
+	///
+	/// # Errors
+	/// - If the body is not present.
 	pub fn bytes(self) -> Result<Vec<u8>, Error> {
 		self.body.ok_or(Error::ExpectedBody)
 	}
 }
 
+#[allow(clippy::module_name_repetitions)]
+#[must_use]
 #[derive(Debug)]
 pub struct RequestBuilder<'h> {
 	request: Request<'h>,
@@ -189,6 +229,10 @@ pub struct RequestBuilder<'h> {
 }
 
 impl<'h> RequestBuilder<'h> {
+	/// Creates a new request builder.
+	///
+	/// # Panics
+	/// - If the URL is not a valid URL.
 	pub fn new<U: TryInto<Url, Error = ParseError>>(method: Method, url: U) -> Self {
 		let url = url.try_into().unwrap();
 		let mut headers = vec![Header {
@@ -214,6 +258,11 @@ impl<'h> RequestBuilder<'h> {
 		}
 	}
 
+	/// Sends the request and returns the response.
+	///
+	/// # Errors
+	/// - If the request could not be sent.
+	/// - If the response could not be read.
 	pub fn send(self) -> Result<Response<'h>, Error> {
 		if let Some(error) = self.error {
 			return Err(error);

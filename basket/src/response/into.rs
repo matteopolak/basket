@@ -1,5 +1,6 @@
 use crate::Response;
 
+#[allow(clippy::module_name_repetitions)]
 pub trait IntoResponse<'h> {
 	fn into_response(self) -> Response<'h>;
 }

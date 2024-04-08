@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 use basket::RequestBuilder;
 use clap::{Parser, ValueEnum, ValueHint};
 
@@ -5,11 +6,11 @@ use clap::{Parser, ValueEnum, ValueHint};
 ///
 /// # Examples
 ///
-/// basket get http://example.com
+/// basket get <http://example.com>
 ///
-/// basket post http://example.com --data "Hello, world!"
+/// basket post <http://example.com> --data "Hello, world!"
 ///
-/// basket post http://example.com --json --data '{"message": "Hello, world!"}'
+/// basket post <http://example.com> --json --data '{\"message\": \"Hello, world!\"}'
 #[derive(Parser)]
 struct Args {
 	#[arg(value_name = "METHOD")]

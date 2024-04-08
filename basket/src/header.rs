@@ -28,6 +28,10 @@ pub const CONTENT_TYPE_PLAIN: Header<'static> = Header {
 };
 
 /// Parses headers and removes the trailing \r\n
+///
+/// # Errors
+/// - If the headers are not valid UTF-8.
+/// - If the headers are not in the correct format.
 pub fn from_reader<R>(reader: &mut R) -> Result<(Vec<Header<'static>>, Option<usize>), Error>
 where
 	R: Read,
@@ -77,6 +81,7 @@ where
 	Ok((headers, content_length))
 }
 
+#[allow(clippy::module_name_repetitions)]
 pub trait IntoHeader<'a> {
 	fn into_header(self) -> Header<'a>;
 }
